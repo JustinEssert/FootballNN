@@ -14,8 +14,7 @@ public class FootballMain {
 
 	public static void main(String[] args) throws Exception{
 		//Checking for correct number of arguments
-		if(args.length!=1) System.exit(1);
-		Config.MAXEPOCH = Integer.parseInt(args[0]);
+
 		for(int i=0;i<Config.TEAMNAMES.length;i++){
 			teams.add(new Team(Config.TEAMNAMES[i]));
 		}

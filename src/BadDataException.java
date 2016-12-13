@@ -8,6 +8,6 @@ public class BadDataException extends RuntimeException
 		super();
 	}
 	public BadDataException(String error){
-		super(error);  
+		super(error);
 	}
 }

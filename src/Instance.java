@@ -9,9 +9,7 @@ import java.util.*;
  */
  
 
-public class Instance{
-	public int year;
-	public int week;
+public class Instance {
 	public ArrayList<Double> attributes;
 	public ArrayList<Double> classValues;
 	

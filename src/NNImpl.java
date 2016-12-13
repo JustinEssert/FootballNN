@@ -5,23 +5,19 @@
  */
 
 import java.util.*;
-import java.io.Console;
-import java.awt.*;
-import javax.swing.*;
-import javax.swing.border.Border;
 
 
-public class NNImpl{
+public class NNImpl {
 	public ArrayList<Node> inputNodes=null;//list of the output layer nodes.
 	public ArrayList<Node> hiddenNodes=null;//list of the hidden layer nodes
 	public ArrayList<Node> outputNodes=null;// list of the output layer nodes
 
 	public ArrayList<Instance> trainingSet=null;//the training set
 
-	Double learningRate=Config.LEARNINGRATE; // variable to store the learning rate
+	Double learningRate= Config.LEARNINGRATE; // variable to store the learning rate
 	int maxEpoch= Config.MAXEPOCH; // variable to store the maximum number of epochs
 	int hiddenNodeCount = Config.NOHIDDENNODES;
-
+	
 	/**
 	 * This constructor creates the nodes necessary for the neural network
 	 * Also connects the nodes of different layers
@@ -96,7 +92,7 @@ public class NNImpl{
 		for(Node hidNode : hiddenNodes){
 
 			hidNode.calculateOutput();
-
+			
 		}
 
 		for(Node outNode : outputNodes){
@@ -144,25 +140,7 @@ public class NNImpl{
 	public void train()
 	{
 		// TODO: add code here
-		JFrame f = new JFrame("Loading Bar");
-		f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		Container content = f.getContentPane();
-		JProgressBar progressBar = new JProgressBar();
-		progressBar.setValue(0);
-		progressBar.setStringPainted(true);
-		Border border = BorderFactory.createTitledBorder("Training...");
-		progressBar.setBorder(border);
-		content.add(progressBar, BorderLayout.NORTH);
-		f.setSize(300, 100);
-		GridBagLayout layout = new GridBagLayout();
-		GridBagConstraints cons = new GridBagConstraints();
-		f.setLocationRelativeTo(null);
-		f.setVisible(true);
-		
-		
 		for(int i=0;i<maxEpoch;i++){
-			if(i%(maxEpoch/100)==0) progressBar.setValue(100*i/maxEpoch);
-
 			for(Instance inst: trainingSet){
 				initialize(inst);
 				int k = 0;
@@ -192,7 +170,7 @@ public class NNImpl{
 									}
 								}
 								Double ok = o.getOutput();
-
+								
 								Double tk = inst.classValues.get(outputNodes.indexOf(o));
 								if(ok>0) sumK += wjk*(tk-ok);
 							}
@@ -205,7 +183,6 @@ public class NNImpl{
 				}
 			}
 		}
-
 	}
 }
 

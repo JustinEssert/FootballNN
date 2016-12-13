@@ -6,8 +6,7 @@ public class FootballMain {
 
 	public static ArrayList<Team> teams = new ArrayList<Team>();
 
-	static final int WEEK = 8;
-	static final int YEAR = 2015;
+	static final int WEEK = 7;
 	static final boolean EVAL = true;
 	static int win = 0;
 	static int lose = 0;
@@ -15,23 +14,21 @@ public class FootballMain {
 	public static void main(String[] args) throws Exception{
 		//Checking for correct number of arguments
 
-		for(int i=0;i<Config.TEAMNAMES.length;i++){
+		for(int i = 0; i< Config.TEAMNAMES.length; i++){
 			teams.add(new Team(Config.TEAMNAMES[i]));
 		}
 
-		DataSet set = DataSet.createDataSet("./alldata.txt");//"../alldataw"+(WEEK-1)+".txt");
-		
+		DataSet set = DataSet.createDataSet("alldataw"+(WEEK-1)+".txt");
+
 		ArrayList<Instance> instances = new ArrayList<Instance>();
 		for(int i=0; i<set.games.size();i++){
-			for(int j=0; j<set.games.get(i).size(); j++){
-				if(i>0||j>2){	
-					for(int k=0;k<set.games.get(i).get(j).size();k++){
-						if(set.games.get(i).get(j).get(k)!=null){
-							instances.add(replayGame(set.games.get(i).get(j).get(k), set));
-						}
-					}
-				}
+			Instance inst = new Instance();
+			for(int j=0;j<set.games.get(i).data.size()-2;j++){
+				inst.attributes.add(set.games.get(i).data.get(j));
 			}
+			inst.classValues.add((set.games.get(i).data.get(set.games.get(i).data.size() - 2)));
+			inst.classValues.add((set.games.get(i).data.get(set.games.get(i).data.size() - 1)));
+			instances.add(inst);
 		}
 
 		//Reading the weights
@@ -51,7 +48,7 @@ public class FootballMain {
 
 		readWeights(hiddenWeights,outputWeights);
 
-		Double learningRate=Config.LEARNINGRATE;
+		Double learningRate= Config.LEARNINGRATE;
 
 		if(learningRate>1 || learningRate<=0)
 		{
@@ -61,13 +58,13 @@ public class FootballMain {
 
 		NNImpl nn=new NNImpl(instances,hiddenWeights,outputWeights);
 		nn.train();
-		if(EVAL) evalWeek(nn, set);
-		else printWeek(nn, set);
-		System.exit(0);
+		if(EVAL) evalWeek(nn);
+		else printWeek(nn);
+
 	}
 
 	// Gets weights randomly
-	public static void readWeights(Double[][] hiddenWeights, Double[][] outputWeights)
+	public static void readWeights(Double [][]hiddenWeights, Double[][]outputWeights)
 	{
 		Random r = new Random();
 
@@ -89,10 +86,10 @@ public class FootballMain {
 		}	
 	}
 
-	public static Instance createGame(Team away, Team home, DataSet set){
+	public static Instance createGame(Team away, Team home){
 
-		ArrayList<Double> awayGames = away.calcAve(set.games, YEAR-Config.BASEYEAR, WEEK-1);
-		ArrayList<Double> homeGames = home.calcAve(set.games, YEAR-Config.BASEYEAR, WEEK-1);
+		ArrayList<Double> awayGames = away.calcAve();
+		ArrayList<Double> homeGames = home.calcAve();
 		ArrayList<Double> ave = new ArrayList<Double>();
 		ArrayList<Double> score = new ArrayList<Double>();
 
@@ -103,34 +100,18 @@ public class FootballMain {
 		for(int i=0;i<marker;i++){
 			ave.add((awayGames.get(i + marker)+homeGames.get(i))/2);
 		}
+		score.add(((awayGames.get(Config.NUMBEROFSTATS-1) + homeGames.get(Config.NUMBEROFSTATS-2))/2));
+		score.add(((awayGames.get(Config.NUMBEROFSTATS-2) + homeGames.get(Config.NUMBEROFSTATS-1))/2));
+
 		Instance inst = new Instance();
 		inst.attributes = ave;
 		inst.classValues = score;
 
 		return inst;
+
 	}
 
-	public static Instance replayGame(Game game, DataSet set){
-
-		ArrayList<Double> awayGames = game.away.calcAve(set.games, game.yrIndex, game.wkIndex);
-		ArrayList<Double> homeGames = game.home.calcAve(set.games, game.yrIndex, game.wkIndex);
-
-		Instance inst = new Instance();
-
-		int marker = (awayGames.size()-2)/2;
-		for(int i=0;i<marker;i++){
-			inst.attributes.add((awayGames.get(i)+homeGames.get(i + marker))/2);
-		}
-		for(int i=0;i<marker;i++){
-			inst.attributes.add((awayGames.get(i + marker)+homeGames.get(i))/2);
-		}
-		inst.classValues.add(game.data.get(game.data.size()-2));
-		inst.classValues.add(game.data.get(game.data.size()-1));
-
-		return inst;
-	}	
-
-	private static void printWeek(NNImpl nn, DataSet set) throws Exception{
+	private static void printWeek(NNImpl nn) throws Exception{
 		URL url = new URL("http://www.espn.com/nfl/scoreboard/_/year/2016/seasontype/2/week/" + WEEK);
 		String lineA;
 		BufferedReader in = new BufferedReader(
@@ -145,7 +126,7 @@ public class FootballMain {
 
 					String s1[] = data[i].split("\"");
 					String s2 = s1[s1.length-1];
-					for(int j=0;j<Config.TEAMNAMES.length;j++){
+					for(int j = 0; j< Config.TEAMNAMES.length; j++){
 						if(s2.equals(Config.TEAMNAMES[j])){
 							teamlist.add(teams.get(j));
 						}
@@ -155,10 +136,10 @@ public class FootballMain {
 				for(int i=0;i<teamlist.size();i+=2){
 					Team home = teamlist.get(i);
 					Team away = teamlist.get(i+1);
-					Instance inst = createGame(away, home, set);
+					Instance inst = createGame(away, home);
 					ArrayList<Double> out = nn.calcInstance(inst);
-					int awayScore = (int)(out.get(0)*10);
-					int homeScore = (int)(out.get(1)*10);
+					int awayScore = (int)((out.get(0))*10);
+					int homeScore = (int)((out.get(1))*10);
 
 					System.out.print(away.name + ", " + awayScore + "\t" + 
 							home.name + ", " + homeScore + "\t\t");
@@ -170,12 +151,12 @@ public class FootballMain {
 		}
 	}
 
-	private static void evalWeek(NNImpl nn, DataSet set) throws Exception{
+	private static void evalWeek(NNImpl nn) throws Exception{
 		URL url = new URL("http://www.espn.com/nfl/scoreboard/_/year/2016/seasontype/2/week/" + WEEK);
 		String lineA;
 		BufferedReader in = new BufferedReader(
 				new InputStreamReader(url.openStream()));
-		System.out.format("%-25s%-17s%-23s%-17s%-15s%s","Pred Score","Pred Dif","Actual Score","Actual Dif","Win/Lose","Error\n");
+		System.out.println("Pred Score \t\tPred Dif \tActual Score \t\tActual Dif \t Win/Lose \t Error\n");
 		while ((lineA = in.readLine()) != null){
 			if(lineA.contains("/i/teamlogos/nfl/500/scoreboard/")){			
 				String data[] = lineA.split("/i/teamlogos/nfl/500/scoreboard/");
@@ -192,13 +173,13 @@ public class FootballMain {
 						String t1 = data[i+1].split(".png")[0].toUpperCase();
 						Integer s1 = Integer.parseInt(data[i].split("\"score\":\"")[1].split("\"")[0]);
 
-						for(int j=0;j<Config.TEAMNAMES.length;j++){
+						for(int j = 0; j< Config.TEAMNAMES.length; j++){
 							if(t2.equals(Config.TEAMNAMES[j])){
 								teamlist.add(teams.get(j));
 								scoreList.add(s2);
 							}
 						}
-						for(int j=0;j<Config.TEAMNAMES.length;j++){
+						for(int j = 0; j< Config.TEAMNAMES.length; j++){
 							if(t1.equals(Config.TEAMNAMES[j])){
 								teamlist.add(teams.get(j));
 								scoreList.add(s1);
@@ -212,50 +193,47 @@ public class FootballMain {
 					Integer sHome = scoreList.get(i);
 					Team away = teamlist.get(i+1);
 					Integer sAway = scoreList.get(i+1);
-					Instance inst = createGame(away, home, set);
+					Instance inst = createGame(away, home);
 					ArrayList<Double> out = nn.calcInstance(inst);
-					int awayScore = (int)(out.get(0)*10);
-					int homeScore = (int)(out.get(1)*10);
-					if(awayScore==homeScore){
-						if(out.get(0)>out.get(1)) awayScore++;
-						if(out.get(0)<out.get(1)) homeScore++;
+					int awayScore = (int)((out.get(0))*10);
+					int homeScore = (int)((out.get(1))*10);
 
-					}
-					System.out.format("%-5s%-4d %-4s %-10d", away.name + ",", awayScore, home.name + ",", homeScore);
-					//System.out.print(away.name + ", " + awayScore + "\t" + 
-					//		home.name + ", " + homeScore + "\t\t");
-
-					int predDif = awayScore-homeScore;
-					int actDif = sAway-sHome;
-
-					if(predDif>0){
-						System.out.format("%-3s %-2s %-10d", away.name, "by", predDif);
-					}else if(predDif==0){
-						System.out.format("%-17s", "Tie");
+					System.out.print(away.name + ", " + awayScore + "\t" + 
+							home.name + ", " + homeScore + "\t\t");
+					
+					boolean predHWin;
+					boolean hWin;
+					
+					int predDif = Math.abs(awayScore-homeScore);
+					int actDif = Math.abs(sAway-sHome);
+					if(awayScore>homeScore){
+						System.out.print(away.name + " by " + predDif + "  ");
+						predHWin=false;
 					}else{
-						System.out.format("%-3s %-2s %-10d", home.name, "by", -predDif);
+						System.out.print(home.name + " by " + predDif + "  ");
+						predHWin=true;
 					}
 
-					System.out.format("%-5s%-4d%-4s%-10d", away.name+",", sAway, home.name+",", sHome);
-
-					if(actDif>0){
-						System.out.format("%-3s %-2s %-10d", away.name, "by", actDif);
-					}else if (actDif==0){
-						System.out.format("%-17s", "Tie");
+					System.out.print("\t" + away.name + ", " + sAway + "\t" +
+							home.name + ", " + sHome + "\t\t");
+					
+					if(sAway>sHome){
+						System.out.print(away.name + " by " + actDif + "  ");
+						hWin=false;
 					}else{
-						System.out.format("%-3s %-2s %-10d", home.name, "by", -actDif);
+						System.out.print(home.name + " by " + actDif + "  ");
+						hWin=true;
 					}
-
-					if(actDif>0&&predDif>0 || actDif<0&&predDif<0 || actDif==0&&predDif==0){
-						System.out.format("%-15s%-7s%d\n", "Win Pick", "Off by", Math.abs(predDif - actDif));
+					if(hWin&&predHWin || !hWin&&!predHWin){
+						System.out.println("\tWin Pick \tOff by " + Math.abs(predDif - actDif) );
 						win++;
 					}else if(predDif==0){
-						System.out.format("%-15s%-7s%d\n", "No Pick", "Off by", actDif);
+						System.out.println("\tNo Pick \tOff by " + actDif);
 					}else{
-						System.out.format("%-15s%-7s%d\n", "Lose Pick", "Off by", (predDif + actDif) );
+						System.out.println("\tLose Pick \tOff by " + (predDif + actDif) );
 						lose++;
 					}
-
+					
 				}
 				System.out.println("\nWin Percentage: \t" + (win*100/(win+lose)) + "% (" + win + "-" + lose + ")");
 			}

@@ -1,6 +1,6 @@
 import java.util.ArrayList;
 
-public class Node{
+public class Node {
 	private int type=0; //0=input,1=biasToHidden,2=hidden,3=biasToOutput,4=Output
 	public ArrayList<NodeWeightPair> parents=null; //Array List that will contain the parents (including the bias node) with weights if applicable
 		 

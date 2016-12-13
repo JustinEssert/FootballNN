@@ -9,23 +9,23 @@ import java.util.ArrayList;
  */
  
 
-public class Game{
-	int yrIndex,wkIndex;
+public class Game {
 	public ArrayList<Double> data;
 	public Team away;
 	public Team home;
 	
-	public Game(Team away, Team home, ArrayList<Double> data, int year, int week)
+	public Game(Team away, Team home, ArrayList<Double> data, boolean configure)
 	{
-		if(year<Config.BASEYEAR){
-			System.out.println("year=" + year);
-			System.exit(-1);
-		}
+		
 		this.data= data;
 		this.away = away;
 		this.home = home;
-		this.yrIndex = year-Config.BASEYEAR;
-		this.wkIndex = week-1;
+		if(configure) Configure();
+	}
+	
+	private void Configure(){
+		home.addWeek(this);
+		away.addWeek(this);
 	}
 	
 }

@@ -4,7 +4,7 @@
  * 
  */
 
-public class NodeWeightPair{
+public class NodeWeightPair {
 	public Node node; //The parent node
 	public Double weight; //Weight of this connection
 	

@@ -1,9 +1,7 @@
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 /**
  * This class organizes the information of a data set into simple structures. To speed up program
@@ -17,60 +15,44 @@ import java.util.Map;
  */
 public class DataSet {
 
-	ArrayList<ArrayList<ArrayList<Game>>> games = new ArrayList<ArrayList<ArrayList<Game>>>();
+	public List<Game> games = new ArrayList<Game>(); // ordered list of instances
+	
 
 	/**
 	 * Add instance to collection.
 	 * 
 	 * @param line begins with label
 	 */
-	public void addInstance(String line) {
+	public void addInstance(String line, boolean configure) {
 
 		String[] splitline = line.split(Config.DELIMITER);
 
-
-
-		if(splitline.length!=30){
+		
+		
+		if(splitline.length!=28){
 			System.out.print("Non Compatible data " + splitline.length + line);
 			System.exit(0);
 		}
 
 		ArrayList<Double> data = new ArrayList<Double>();
 		Team away, home;
+		away = FootballMain.teams.get((int)Double.parseDouble(splitline[0]));
+		home = FootballMain.teams.get((int)Double.parseDouble(splitline[1]));
 
-		away = FootballMain.teams.get((int)Double.parseDouble(splitline[2]));
-		home = FootballMain.teams.get((int)Double.parseDouble(splitline[3]));
-		int year,week;
-		year = (int)Double.parseDouble(splitline[0]);
-		week = (int)Double.parseDouble(splitline[1]);
-		
-		if(week>Config.TOTALWEEKS){
-			System.out.println("Incorrect number of weeks ," + week);
-			System.exit(-1);
-		}
-
-		for(int i=4;i<splitline.length;i++){
-			if(i==5||i==7||i==12||i==17||i==19||i==24){
-				data.add((double)((((int)(Double.parseDouble(splitline[i])*100)))/10));
-			}else if(i==8||i==9||i==13||i==14||i==20||i==21||i==25||i==26){
-				data.add(Double.parseDouble(splitline[i]));
-			}else if(i==4||i==11||i==15||i==16||i==23||i==27||i==28||i==29){
-				data.add(Double.parseDouble(splitline[i])/10);
-			}else {
+		for(int i=2;i<splitline.length;i++){
+			if(i==4||i==8||i==16||i==20){
 				data.add(Double.parseDouble(splitline[i])/100);
+			}else if(i==3||i==5||i==10||i==15||i==17||i==22){
+				data.add(Double.parseDouble(splitline[i])*10);
+			}else if(i==6||i==7||i==11||i==12||i==18||i==19||i==23||i==24){
+				data.add(Double.parseDouble(splitline[i]));
+			}else {
+				data.add(Double.parseDouble(splitline[i])/10);
 			}
 		}
 
-		Game newGame = new Game(away, home, data, year, week);
-		int yrIndex = year - Config.BASEYEAR;
-		int wkIndex = week - 1;
-		while(games.size()-1<yrIndex){
-			games.add(new ArrayList<ArrayList<Game>>());
-		}
-		while(games.get(yrIndex).size()-1<wkIndex){
-			games.get(yrIndex).add(new ArrayList<Game>());
-		}
-		games.get(yrIndex).get(wkIndex).add(newGame);
+		Game newGame = new Game(away, home, data, configure);
+		if(!configure) games.add(newGame);
 	}
 
 	/**
@@ -79,13 +61,17 @@ public class DataSet {
 	 */
 	public static DataSet createDataSet(String file) {
 		DataSet set = new DataSet();
+		boolean configure = false;
 		BufferedReader in;
 		try {
 			in = new BufferedReader(new FileReader(file));
 			while (in.ready()) {
 				String line = in.readLine();
-				int prefix = Integer.parseInt(line.substring(0,4));
-				if(prefix>=Config.BASEYEAR) set.addInstance(line);
+				String prefix = line.substring(0, 2);
+				if(prefix.equals("#%")) configure=true;
+				else if (!prefix.equals("//")&&!prefix.equals("%%")&&!prefix.equals("##")) {
+					set.addInstance(line, configure);
+				}
 			}
 			in.close();
 		} catch (Exception e) {
@@ -96,9 +82,9 @@ public class DataSet {
 
 		return set;
 	}
-
+	
 	public static void printGame(int week){
-
+		
 	}
 
 
